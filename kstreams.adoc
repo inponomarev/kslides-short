@@ -1,7 +1,8 @@
-= Kafka Streams API: Шаг за рамки Hello World
+= Kafka Streams API: Шаг за рамки Hello World (краткая версия)
 Иван Пономарёв, КУРС/МФТИ
 :revealjs_theme: black
 :revealjs_customtheme: white_course.css
+:revealjs_transition: none
 :revealjs_slideNumber:
 :revealjs_history:
 :revealjs_progress:
@@ -18,7 +19,6 @@ include::_doc_general_attributes.adoc[]
 :iconfont-name: font-awesome-4.7.0/css/font-awesome
 :revealjs_mouseWheel: true
 :revealjs_center: false
-:revealjs_transition: none
 :revealjs_width: 1600
 :revealjs_height: 900
 
@@ -43,49 +43,10 @@ icon:twitter[size=lg] @inponomarev
 * Текущий проект: Real-time Webscraping
 |===
 
-[%notitle]
-== Наш опенсорс: Celesta & 2bass
-
-[cols="45a,35a"]
-|===
-.^|
-image::celesta_duke.png[]
-.^|
-image::bass_duke.png[]
-|===
-
-== Celesta & 2bass -- хабрапосты:
-
-* https://habr.com/ru/post/337816/[Миграция схемы данных без головной боли: идемпотентность и конвергентность для DDL-скриптов]
-* https://habr.com/ru/post/455746/[Celesta 7.x: ORM, миграции и тестирование «в одном флаконе»]
-
-image::migration.png[]
-
-== Celesta 7.x
-
-* Только Java (отказались от Jython)
-* Maven Plugin 
-* JUnit5 extension
-* Spring Boot Starter
-
-== Всё, что я показываю, есть на гитхабе
-
-[cols="30a,70a"]
-|===
-.^|image::octocat.jpg[]
-.^|
-* Слайды: https://inponomarev.github.io/kstreams-examples[inponomarev.github.io/kstreams-examples]
-
-* Исходники: https://github.com/inponomarev/kstreams-examples[github.com/inponomarev/kstreams-examples]
-|===
-
-
-[transition="fade-out, slide-in"]
 == Зачем нам Kafka?
 
 image::kafka.jpg[{image-30-width}]
 
-[transition="fade-in, fade-out"]
 == Зачем нам Kafka?
 
 [%step]
@@ -105,63 +66,49 @@ image::kafka.jpg[{image-30-width}]
 ** Внутреннее состояние обработчиков (репликация)
 ** Легкое масштабирование
 
-== Disclaimer #1: предполагается базовое понимание Кафки
 
-* https://www.youtube.com/watch?v=ztsnkyaIO64[Виктор Гамов — Все стримы ведут в Кафку (jug.msk.ru 23/04/2018)]
+== Когда меня спрашивают, какой стриминговый фреймворк использовать
 
-* https://www.youtube.com/watch?v=PgoRuxKqStI[Виктор Гамов — Kafka Streams IQ: «Зачем нам база данных?» (jug.msk.ru 08/05/2019)]
-
-== Disclaimer #2: доклад не о жизни в production!
-
-Доклады о жизни в production:
-
-* https://www.youtube.com/watch?v=A_yUaPARv8U[Григорий Кошелев — Когда всё пошло по Кафке (JPoint 2019)]
-* https://www.youtube.com/watch?v=wCCR1Tkxc-s[Никита Сальников-Тарновский — Streaming architecture — шаг за рамки примеров кода (devclub.eu 2019.03.26)]
+image::weuseflink.jpg[{image-60-width}]
 
 
-== Kafka за 30 секунд
-.Источник: Kafka. The Definitive Guide
-image::kafka_cluster.png[{image-60-width}]
+== Disclaimers
 
-== Kafka Message
+1. Предполагается базовое понимание Кафки
 
-image::message.jpg[{image-20-width}]
+** https://www.youtube.com/watch?v=A_yUaPARv8U[Григорий Кошелев — Когда всё пошло по Кафке (JPoint 2019)]
 
-* Номер партиции
-* Ключ
-* Значение
+2. Доклад не о жизни в production!
 
-== Compacted topics
-.Источник: Kafka Documentation
-image::log_compaction.png[{image-60-width}]
+** https://www.youtube.com/watch?v=wCCR1Tkxc-s[Никита Сальников-Тарновский — Streaming architecture — шаг за рамки примеров кода (devclub.eu 2019.03.26)]
 
-== Наш план
+// == Kafka Message
+// 
+// [cols="30a,70a"]
+// |===
+// .^|image::message.jpg[]
+// .^|
+// * Номер партиции
+// * Ключ
+// * Значение
+// |===
+// 
+// == Compacted topics
+// .Источник: Kafka Documentation
+// image::log_compaction.png[{image-60-width}]
 
-[cols="20a,60a,20a"]
-|===
-.^|image::kafka.jpg[]
-.^|
-1. *Конфигурация приложения. Простые (stateless) трансформации*
-2. Трансформации с использованием локального состояния
-3. Дуализм «поток—таблица» и табличные join-ы
-4. Время и оконные операции
-.^|image::kafka.jpg[]
-|===
-
-[transition="fade-out, slide-in"]
 == Kafka Streams API: общая структура KStreams-приложения
 
-[source,java,highlight='1-2']
+[source,java,highlight='1,4,6']
 ----
 StreamsConfig config = ...;
 //Здесь устанавливаем всякие опции
 
 Topology topology = new StreamsBuilder()
 //Здесь строим топологию
-....build();
+    ....build();
 ----
 
-[transition="fade-in, fade-out"]
 == Kafka Streams API: общая структура KStreams-приложения
 Топология -- конвейер обработчиков:
 
@@ -193,11 +140,9 @@ e->g;
 }
 ----
 
-
-[transition="fade-in, slide-out"]
 == Kafka Streams API: общая структура KStreams-приложения
 
-[source,java]
+[source,java,highlight='9-13']
 ----
 StreamsConfig config = ...;
 //Здесь устанавливаем всякие опции
@@ -217,18 +162,11 @@ streams.close();
 
 
 
-== В Спринге достаточно определить две вещи
+== В Спринге достаточно
 
-* `@Bean KafkaStreamsConfiguration`
-* `@Bean Topology`
-
-[.fragment]
-[.custom-style]
-[cols="30a,70a"]
-|===
-.^|image::borisov.png[]
-.<|И не забудьте про `@EnableKafkaStreams`
-|===
+* Определить `@Bean KafkaStreamsConfiguration`
+* Определить `@Bean Topology`
+* И не забыть добавить `@EnableKafkaStreams`
 
 == Легенда
 
@@ -254,79 +192,170 @@ class Bet {
 |===
 
 
-== @Bean KafkaConfiguration 
-
-[source,java]
-----
-//ВАЖНО!
-@Bean(name = 
-    KafkaStreamsDefaultConfiguration
-                .DEFAULT_STREAMS_CONFIG_BEAN_NAME)
-public KafkaStreamsConfiguration getStreamsConfig() {
-    Map<String, Object> props = new HashMap<>();
-    //ВАЖНО!
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG,
-        "stateless-demo-app");
-    //ВАЖНО!
-    props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 4);
-    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    ...
-    KafkaStreamsConfiguration streamsConfig = 
-            new KafkaStreamsConfiguration(props);
-    return streamsConfig;
-}
-----
-
-== @Bean NewTopic
-
-[source,java]
-----
-@Bean
-NewTopic getFilteredTopic() {
-    Map<String, String> props = new HashMap<>();
-    props.put(
-      TopicConfig.CLEANUP_POLICY_CONFIG,
-      TopicConfig.CLEANUP_POLICY_COMPACT);
-    return new NewTopic("mytopic", 10, (short) 1).configs(props);
-}
-----
-
+// == @Bean KafkaStreamsConfiguration 
+// 
+// [source,java,highlight='7-8']
+// ----
+// @Bean(name = 
+//     KafkaStreamsDefaultConfiguration
+//                 .DEFAULT_STREAMS_CONFIG_BEAN_NAME)
+// public KafkaStreamsConfiguration getStreamsConfig() // {
+//     Map<String, Object> props = new HashMap<>();
+//     //ВАЖНО!
+//     props.put(StreamsConfig.APPLICATION_ID_CONFIG,
+//         "stateless-demo-app");
+//     //ВАЖНО!
+//     props.put(StreamsConfig.NUM_STREAM_THREADS_CONF// IG, 4);
+//     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFI// G,
+//                                       // "localhost:9092");
+//     ...
+//     KafkaStreamsConfiguration streamsConfig = 
+//             new KafkaStreamsConfiguration(props);
+//     return streamsConfig;
+// }
+// ----
+// 
+// == @Bean KafkaStreamsConfiguration 
+// 
+// [source,java,highlight='10']
+// ----
+// @Bean(name = 
+//     KafkaStreamsDefaultConfiguration
+//                 .DEFAULT_STREAMS_CONFIG_BEAN_NAME)
+// public KafkaStreamsConfiguration getStreamsConfig() // {
+//     Map<String, Object> props = new HashMap<>();
+//     //ВАЖНО!
+//     props.put(StreamsConfig.APPLICATION_ID_CONFIG,
+//         "stateless-demo-app");
+//     //ВАЖНО!
+//     props.put(StreamsConfig.NUM_STREAM_THREADS_CONF// IG, 4);
+//     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFI// G,
+//                                       // "localhost:9092");
+//     ...
+//     KafkaStreamsConfiguration streamsConfig = 
+//             new KafkaStreamsConfiguration(props);
+//     return streamsConfig;
+// }
+// ----
 
 == @Bean Topology
-[graphviz, "yelling-topology.png"]
+[graphviz, "yelling-topology1.png"]
 -----
 digraph G {
 graph [ dpi = 150 ]; 
 rankdir="LR";
 node [fontsize=16; shape="circle"; fixedsize="true"; width="1.1"];
+Source[style=filled; fillcolor="#ffffcc"];
+Source -> MapVal -> Sink
+
+}
+-----
+
+[source,java,highlight='3-4']
+----
+@Bean
+public Topology createTopology(StreamsBuilder streamsBuilder) {
+  KStream<String, Bet> input = streamsBuilder.stream(
+     BET_TOPIC, Consumed.with(Serdes...);
+  KStream<String, Long> gain = input.mapValues(
+              v -> Math.round(v.getAmount() * v.getOdds()));
+  gain.to(GAIN_TOPIC, Produced.with(Serdes.String(),
+                new JsonSerde<>(Long.class)));
+  return streamsBuilder.build();
+}
+----
+
+
+== @Bean Topology
+[graphviz, "yelling-topology2.png"]
+-----
+digraph G {
+graph [ dpi = 150 ]; 
+rankdir="LR";
+node [fontsize=16; shape="circle"; fixedsize="true"; width="1.1"];
+MapVal[style=filled; fillcolor="#ffffcc"];
 
 Source -> MapVal -> Sink
 
 }
 -----
 
-[source,java]
+[source,java,highlight='5-6']
 ----
 @Bean
 public Topology createTopology(StreamsBuilder streamsBuilder) {
-    KStream<String, Bet> input = streamsBuilder.stream(...);
-    KStream<String, Long> gain
-            = input.mapValues(v -> Math.round(v.getAmount() * v.getOdds()));
-    gain.to(GAIN_TOPIC, Produced.with(Serdes.String(),
+  KStream<String, Bet> input = streamsBuilder.stream(
+     BET_TOPIC, Consumed.with(Serdes...);
+  KStream<String, Long> gain = input.mapValues(
+              v -> Math.round(v.getAmount() * v.getOdds()));
+  gain.to(GAIN_TOPIC, Produced.with(Serdes.String(),
                 new JsonSerde<>(Long.class)));
-    return streamsBuilder.build();
+  return streamsBuilder.build();
 }
 ----
 
 
+== @Bean Topology
+[graphviz, "yelling-topology3.png"]
+-----
+digraph G {
+graph [ dpi = 150 ]; 
+rankdir="LR";
+node [fontsize=16; shape="circle"; fixedsize="true"; width="1.1"];
+Sink[style=filled; fillcolor="#ffffcc"];
+
+Source -> MapVal -> Sink
+
+}
+-----
+
+[source,java,highlight='7-8']
+----
+@Bean
+public Topology createTopology(StreamsBuilder streamsBuilder) {
+  KStream<String, Bet> input = streamsBuilder.stream(
+     BET_TOPIC, Consumed.with(Serdes...);
+  KStream<String, Long> gain = input.mapValues(
+              v -> Math.round(v.getAmount() * v.getOdds()));
+  gain.to(GAIN_TOPIC, Produced.with(Serdes.String(),
+                new JsonSerde<>(Long.class)));
+  return streamsBuilder.build();
+}
+----
+
+== Как проверить, что оно считает правильно?
+
+`TopologyTestDriver` to the resque!
+
 == TopologyTestDriver: создание
 
-[source,java]
+[source,java,highlight='1-2,5-6']
 ----
 KafkaStreamsConfiguration config = new KafkaConfiguration()
                                         .getStreamsConfig();
 StreamsBuilder sb = new StreamsBuilder();
-Topology topology = new TopologyConfiguration().createTopology(sb);
+
+Topology topology = 
+    new TopologyConfiguration().createTopology(sb);
+
+//Наличие настоящей Кафки не требуется
+TopologyTestDriver topologyTestDriver = 
+        new TopologyTestDriver(topology, 
+                               config.asProperties());
+----
+
+== TopologyTestDriver: создание
+
+[source,java,highlight='8-11']
+----
+KafkaStreamsConfiguration config = new KafkaConfiguration()
+                                        .getStreamsConfig();
+StreamsBuilder sb = new StreamsBuilder();
+
+Topology topology = 
+    new TopologyConfiguration().createTopology(sb);
+
+//Наличие настоящей Кафки не требуется
 TopologyTestDriver topologyTestDriver = 
         new TopologyTestDriver(topology, 
                                config.asProperties());
@@ -334,7 +363,7 @@ TopologyTestDriver topologyTestDriver =
 
 == TopologyTestDriver: использование
 
-[source,java]
+[source,java,highlight='8']
 ----
 Bet bet = Bet.builder()
             .bettor("John Doe")
@@ -349,7 +378,7 @@ topologyTestDriver.pipeInput(
 
 == TopologyTestDriver: использование
 
-[source,java]
+[source,java,highlight='2']
 ----
 ProducerRecord<String, Long> record =
    topologyTestDriver.readOutput(
@@ -362,134 +391,120 @@ assertEquals(bet.key(), record.key());
 assertEquals(170L, record.value().longValue());
 ----
 
-== Если что-то пошло не так...
+== TopologyTestDriver: использование
 
-* `default.deserialization.exception.handler` -- не смогли десериализовать
-* `default.production.exception.handler` -- брокер отверг сообщение (например, оно слишком велико)
+[source,java,highlight='8,9']
+----
+ProducerRecord<String, Long> record =
+   topologyTestDriver.readOutput(
+        GAIN_TOPIC, 
+        new StringDeserializer(),
+        new JsonDeserializer<>(Long.class)
+    );
 
-image::failure.jpg[{image-50-width}]
+assertEquals(bet.key(), record.key());
+assertEquals(170L, record.value().longValue());
+----
 
-== Если всё совсем развалилось
+== Как понять, что граф топологии построен правильно?
 
+* Метод `describe()`
 [source,java]
-----
-streams.setUncaughtExceptionHandler(
-  (Thread thread, Throwable throwable) -> {
-    . . .
-   });
-----
+System.out.println(topology.describe());
+* Kafka Streams Topology Visualizer (https://zz85.github.io/kafka-streams-viz/)
 
-image::uncaughtexception.jpg[{image-100-width}]
+== Визуализация топологии
 
-[.fragment]
-В Спринге всё сложнее (см. код)
+image::visualizer.png[{image-50-width}]
 
-== Состояния приложения KafkaStreams
+// == Как обработать ошибки?
+// 
+// [%step]
+// * `default.deserialization.exception.handler` -- не смогли // десериализовать
+// * `default.production.exception.handler` -- брокер отверг сообщение // (например, оно слишком велико)
+// 
+// == Как обработать ошибки?
+// 
+// * `default.deserialization.exception.handler` -- не смогли // десериализовать
+// * `default.production.exception.handler` -- брокер отверг сообщение // (например, оно слишком велико)
+// * Если совсем развалилось:
+// [source,java]
+// ----
+// streams.setUncaughtExceptionHandler(
+//   (Thread thread, Throwable throwable) -> {
+//     . . .
+//    });
+// ----
 
-[graphviz, "kstreamsstates.png"]
------
-digraph G {
-  graph [ dpi = 150 ]; 
-  Created -> Running;
-  Running -> Rebalancing;
-  Rebalancing -> Running;
-  Rebalancing -> PendingShutdown;
-  PendingShutdown -> NotRunning;
-  Created -> PendingShutdown; 
-  Running -> PendingShutdown; 
-  Running -> Error;
-  Rebalancing -> Error;
-  Error -> PendingShutdown; 
-  {rank = same; Created; Running;}
-  {rank = same; Rebalancing; Error;}
-  {rank = same; PendingShutdown; NotRunning;}
-}
------
-
-== Что ещё нужно знать про stateless-трансформации?
-
-[transition="fade-out, slide-in"]
-== Простое ветвление стримов
-Java-стримы так не могут:
-[source,java]
-----
-KStream<..> foo = ...
-KStream<..> bar = foo.mapValues(…).map... to...
-Kstream<..> baz = foo.filter(…).map... forEach...
-----
-[graphviz, "simplebranch.png"]
------
-digraph G {
-graph [ dpi = 150 ]; 
-rankdir="LR";
-node [fontsize=16; shape="circle"; fixedsize="true"; width="0.5"; label=""];
-Start, BF, CF, DF [style="invis"]
-Start -> A
-A -> B -> BF
-A -> C -> CF
-}
------
-
-[transition="fade-in, fade-out"]
-== Ветвление стримов по условию
-
-Не используйте `KStream.branch`, используйте `KafkaStreamsBrancher`!
-[source,java]
-----
-new KafkaStreamsBrancher<String, String>()
-   .branch((key, value) -> value.contains("A"), ks -> ks.to("A"))
-   .branch((key, value) -> value.contains("B"), ks -> ks.to("B"))
-   .defaultBranch(ks -> ks.to("C"))
-   .onTopOf(builder.stream("source"))
-   .map(...)
-----
-[graphviz, "switchbranch.png"]
------
-digraph G {
-graph [ dpi = 150 ]; 
-rankdir="LR";
-node [fontsize=16; shape="circle"; fixedsize="true"; width="0.5"; label=""];
-Start, BF, CF, DF [style="invis"]
-Branch [shape="diamond", label="?"]
-Start -> A -> Branch
-Branch -> B -> BF
-Branch -> C -> CF
-}
------
-
-[transition="fade-in, slide-out"]
-== Простое слияние
-[source,java]
-----
-KStream<String, Integer> foo = ... 
-KStream<String, Integer> bar = ...
-KStream<String, Integer> merge = foo.merge(bar);
-----
-[graphviz, "merge.png"]
------
-digraph G {
-graph [ dpi = 150 ]; 
-rankdir="LR";
-node [fontsize=16; shape="circle"; fixedsize="true"; width="0.5"; label=""];
-Finish, BF, CF, DF [style="invis"]
-BF -> A
-CF -> B 
-A -> C -> Finish
-B -> C 
-}
------
-
-== Наш план
-[cols="20a,60a,20a"]
-|===
-.^|image::kafka.jpg[]
-.^|
-1. [line-through]#Конфигурация приложения. Простые (stateless) трансформации#
-2. *Трансформации с использованием локального состояния*
-3. Дуализм «поток—таблица» и табличные join-ы
-4. Время и оконные операции
-.^|image::kafka.jpg[]
-|===
+// == Что ещё нужно знать про stateless-трансформации?
+// 
+// == Простое ветвление стримов
+// Java-стримы так не могут:
+// [source,java]
+// ----
+// KStream<..> foo = ...
+// KStream<..> bar = foo.mapValues(…).map... to...
+// Kstream<..> baz = foo.filter(…).map... forEach...
+// ----
+// [graphviz, "simplebranch.png"]
+// -----
+// digraph G {
+// graph [ dpi = 150 ]; 
+// rankdir="LR";
+// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
+// Start, BF, CF, DF [style="invis"]
+// Start -> A
+// A -> B -> BF
+// A -> C -> CF
+// }
+// -----
+// 
+// == Ветвление стримов по условию
+// 
+// Не используйте `KStream.branch`, используйте // `KafkaStreamsBrancher`!
+// [source,java]
+// ----
+// new KafkaStreamsBrancher<String, String>()
+//    .branch((key, value) -> value.contains("A"), ks // -> ks.to("A"))
+//    .branch((key, value) -> value.contains("B"), ks // -> ks.to("B"))
+//    .defaultBranch(ks -> ks.to("C"))
+//    .onTopOf(builder.stream("source"))
+//    .map(...)
+// ----
+// [graphviz, "switchbranch.png"]
+// -----
+// digraph G {
+// graph [ dpi = 150 ]; 
+// rankdir="LR";
+// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
+// Start, BF, CF, DF [style="invis"]
+// Branch [shape="diamond", label="?"]
+// Start -> A -> Branch
+// Branch -> B -> BF
+// Branch -> C -> CF
+// }
+// -----
+// 
+// == Простое слияние
+// [source,java]
+// ----
+// KStream<String, Integer> foo = ... 
+// KStream<String, Integer> bar = ...
+// KStream<String, Integer> merge = foo.merge(bar);
+// ----
+// [graphviz, "merge.png"]
+// -----
+// digraph G {
+// graph [ dpi = 150 ]; 
+// rankdir="LR";
+// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
+// Finish, BF, CF, DF [style="invis"]
+// BF -> A
+// CF -> B 
+// A -> C -> Finish
+// B -> C 
+// }
+// -----
 
 == Локальное состояние
 
@@ -498,7 +513,7 @@ Facebook's RocksDB -- что это и зачем?
 [.custom-style]
 [cols="25a,75a"]
 |===
-.^|image::rocksdb.png[]
+.^|image::rocksdb.png[{image-80-width}]
 .^|
 * Embedded key/value storage
 * LSM Tree (Log-Structured Merge-Tree)
@@ -508,21 +523,30 @@ Facebook's RocksDB -- что это и зачем?
 
 == RocksDB похож на `TreeMap<K,V>`
 
+[.custom-style]
+[cols="25a,75a"]
+|===
+.^|image::rocksdb.png[{image-80-width}]
+.^|
 * Сохранение K,V в бинарном формате
 * Лексикографическая сортировка
 * Iterator (snapshot view)
 * Удаление диапазона (deleteRange)
+|===
 
 == Пишем “Bet Totalling App”
 
 Какова сумма выплат по сделанным ставкам, если сыграет исход?
 
-[graphviz, "counting-topology.png"]
+== @Bean Topology
+
+[graphviz, "counting-topology1.png"]
 -----
 digraph G {
 graph [ dpi = 150 ]; 
 rankdir="LR";
 node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+Source[style=filled; fillcolor="#ffffcc"];
 Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5"]
 Source -> MapVal -> Sum -> Sink
 Sum -> Store [dir=both; label=" \n "]
@@ -530,21 +554,65 @@ Sum -> Store [dir=both; label=" \n "]
 }
 -----
 
-== @Bean Topology
-
-[source,java]
+[source,java,highlight='2']
 ----
 KStream<String, Bet> input = streamsBuilder.
     stream(BET_TOPIC, Consumed.with(Serdes.String(),
                       new JsonSerde<>(Bet.class)));
-
-KStream<String, Long> counted =
-    new TotallingTransformer()
-        .transformStream(streamsBuilder, input);
 ----
 
-== Суммирование ставок
-[source,java]
+== @Bean Topology
+
+[graphviz, "counting-topology2.png"]
+-----
+digraph G {
+graph [ dpi = 150 ]; 
+rankdir="LR";
+node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+MapVal[style=filled; fillcolor="#ffffcc"];
+Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5"]
+Source -> MapVal -> Sum -> Sink
+Sum -> Store [dir=both; label=" \n "]
+{rank = same; Store; Sum;}
+}
+-----
+
+[source,java,highlight='3']
+----
+KStream<String, Long> gain
+    = input.mapValues(
+      v -> Math.round(v.getAmount() * v.getOdds()));
+
+//Key: "Germany-Belgium:H"
+//Value: 170L
+----
+
+== @Bean Topology
+
+[graphviz, "counting-topology3.png"]
+-----
+digraph G {
+graph [ dpi = 150 ]; 
+rankdir="LR";
+node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+Sum[style=filled; fillcolor="#ffffcc"];
+Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5";style=filled; fillcolor="#ffffcc"]
+Source -> MapVal -> Sum -> Sink
+Sum -> Store [dir=both; label=" \n "]
+{rank = same; Store; Sum;}
+}
+-----
+
+[source,java,highlight='3']
+----
+KStream<String, Long> counted =
+    new TotallingTransformer()
+            .transformStream(streamsBuilder, gain);
+----
+
+
+== TotallingTransformer
+[source,java,highlight='4-6']
 ----
 @Override
 public KeyValue<String, Long> transform(String key, Bet value,
@@ -558,8 +626,39 @@ public KeyValue<String, Long> transform(String key, Bet value,
 }
 ----
 
+== TotallingTransformer
+[source,java,highlight='7']
+----
+@Override
+public KeyValue<String, Long> transform(String key, Bet value,
+                    KeyValueStore<String, Long> stateStore) {
+    long current = Optional
+        .ofNullable(stateStore.get(key))
+        .orElse(0L);
+    current += value.getAmount();
+    stateStore.put(key, current);
+    return KeyValue.pair(key, current);
+}
+----
+
+== TotallingTransformer
+[source,java,highlight='8']
+----
+@Override
+public KeyValue<String, Long> transform(String key, Bet value,
+                    KeyValueStore<String, Long> stateStore) {
+    long current = Optional
+        .ofNullable(stateStore.get(key))
+        .orElse(0L);
+    current += value.getAmount();
+    stateStore.put(key, current);
+    return KeyValue.pair(key, current);
+}
+----
+
+
 == StateStore доступен в тестах
-[source,java]
+[source,java,highlight='8,10,11']
 ----
 @Test
 void testTopology() {
@@ -580,14 +679,6 @@ void testTopology() {
 
 * Ребалансировка / репликация партиций state при запуске / выключении обработчиков.
 
-== Подробнее о ребалансировке
-
-[cols="30a,70a"]
-|===
-.^|image::matthias.jpg[]
-.^|
-*Matthias J. Sax* https://www.confluent.io/kafka-summit-lon19/everything-you-wanted-to-know-kafka-afraid[Everything You Always Wanted to Know About Kafka’s Rebalance Protocol but Were Afraid to Ask (Kafka Summit London, 2019)]
-|===
 
 == Сохранение локального состояния в{nbsp}топик
 
@@ -601,8 +692,9 @@ ReplicationFactor:1
 Configs:cleanup.policy=compact
 ----
 
-[.fragment]
-[graphviz, "counting-topology-changelog.png"]
+
+== Мы думали, картина такая...
+[graphviz, "counting-topology-changelog1.png"]
 -----
 digraph G {
 graph [ dpi = 150 ]; 
@@ -612,12 +704,26 @@ Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5"]
 Source -> MapVal -> Sum -> Sink
 Sum -> Store [dir=both; label=" \n "]
 {rank = same; Store; Sum;}
-Store -> Changelog[style="dashed"]
-Changelog[shape="box"; style="dashed"; width="1.5"]
+Store -> Changelog[style="invis"]
+Changelog[shape="box"; style="invis"; width="1.5"; fillcolor="#ffffcc"]
 }
 -----
 
-[transition="fade-out, slide-in"]
+== ...но на самом деле она вот какая:
+[graphviz, "counting-topology-changelog2.png"]
+-----
+digraph G {
+graph [ dpi = 150 ]; 
+rankdir="LR";
+node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5"]
+Source -> MapVal -> Sum -> Sink
+Sum -> Store [dir=both; label=" \n "]
+{rank = same; Store; Sum;}
+Store -> Changelog
+Changelog[shape="box"; style="filled"; width="1.5"; fillcolor="#ffffcc"]
+}
+-----
 
 == Партиционирование и local state
 [graphviz, "local-partitioning-oneworker.png"]
@@ -647,7 +753,7 @@ digraph D {
           
           
         d->ls1;
-        p3[shape="plaintext" label = "Partition 3"];
+        
         ls1->p3[dir="both"];
           
           subgraph cluster_pp11{
@@ -672,8 +778,9 @@ digraph D {
         b->ls1;
         c->ls1;
         
-        p1[shape="plaintext" label = "Partition 1"];
-        p2[shape="plaintext" label = "Partition 2"];
+        p1[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 2"];
+        p2[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 3"];
+        p3[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 1"];
         ls1->p1[dir="both"];
         ls1->p2[dir="both"];
         
@@ -686,7 +793,6 @@ digraph D {
 } 
 -----
 
-[transition="fade-in, slide-out"]
 == Партиционирование и local state
 [graphviz, "local-partitioning.png"]
 -----
@@ -728,8 +834,8 @@ digraph D {
         b->ls1;
         c->ls1;
         
-        p1[shape="plaintext" label = "Partition 1"];
-        p2[shape="plaintext" label = "Partition 2"];
+        p1[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 1"];
+        p2[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 2"];
         ls1->p1[dir="both"];
         ls1->p2[dir="both"];
     }
@@ -746,7 +852,7 @@ digraph D {
           
         ls2[shape="cylinder" label = "RocksDB"]
         d->ls2;
-        p3[shape="plaintext" label = "Partition 3"];
+        p3[shape="plaintext"; style="filled"; fillcolor="#ffffcc"; label = "Partition 3"];
         ls2->p3[dir="both"];
     }
     
@@ -754,6 +860,15 @@ digraph D {
   }
 } 
 -----
+
+// == Подробнее о ребалансировке
+// 
+// [cols="30a,70a"]
+// |===
+// .^|image::matthias.jpg[]
+// .^|
+// *Matthias J. Sax* // https://www.confluent.io/kafka-summit-lon19/everyth// ing-you-wanted-to-know-kafka-afraid[Everything You // Always Wanted to Know About Kafka’s Rebalance // Protocol but Were Afraid to Ask (Kafka Summit // London, 2019)]
+// |===
 
 
 == Репартиционирование
@@ -773,11 +888,11 @@ digraph G
 }
 -----
 
+* Неявное при операциях, меняющих ключ + stateful-операциях
 * Явное при помощи +
 `through(String topic, Produced<K, V> produced)`
-* Неявное при операциях, меняющих ключ + stateful-операциях
 
-[transition="fade-out, slide-in"]
+
 == Дублирующееся неявное репартиционирование
 [source,java]
 ----
@@ -811,7 +926,6 @@ throughJoin [shape="record"; label="{ | | | | }"; height = "0.2"]
 }
 -----
 
-[transition="fade-in, slide-out"]
 == Избавляемся от дублирующегося репартиционирования
 
 [source,java]
@@ -845,70 +959,56 @@ throughAgg [shape="record"; label="{ | | | | }"; height = "0.2"]
 }
 -----
 
-== Ключ лучше лишний раз не трогать
-
-*Key only:* `selectKey`
-
-[cols=2*] 
-|===
-|*Key and Value*
-|*Value Only*
-
-|`map`
-|`mapValues`
-
-|`flatMap`
-|`flatMapValues`
-
-|`transform`
-|`transformValues`
-
-|`flatTransform`
-|`flatTransformValues`
-
-
-|===
-
-== Подробнее про «лишнее» репартиционирование
-
-[cols="30a,70a"]
-|===
-.^|image::guozhang.jpeg[]
-.^|
-*Guozhang Wang* https://www.confluent.io/kafka-summit-lon19/performance-analysis-optimizations-kafka-streams-applications[Performance Analysis and Optimizations for Kafka Streams Applications (Kafka Summit London, 2019)]
-|===
-
-== Наш план
-
-[cols="20a,60a,20a"]
-|===
-.^|image::kafka.jpg[]
-.^|
-1. [line-through]#Конфигурация приложения. Простые (stateless) трансформации#
-2. [line-through]#Трансформации с использованием локального состояния#
-3. *Дуализм «поток—таблица» и табличные join-ы*
-4. Время и оконные операции
-.^|image::kafka.jpg[]
-|===
+// == Ключ лучше лишний раз не трогать
+// 
+// *Key only:* `selectKey`
+// 
+// [cols=2*] 
+// |===
+// |*Key and Value*
+// |*Value Only*
+// 
+// |`map`
+// |`mapValues`
+// 
+// |`flatMap`
+// |`flatMapValues`
+// 
+// |`transform`
+// |`transformValues`
+// 
+// |`flatTransform`
+// |`flatTransformValues`
+// 
+// 
+// |===
+// 
+// == Подробнее про «лишнее» репартиционирование
+// 
+// [cols="30a,70a"]
+// |===
+// .^|image::guozhang.jpeg[]
+// .^|
+// *Guozhang Wang* // https://www.confluent.io/kafka-summit-lon19/perform// ance-analysis-optimizations-kafka-streams-applicati// ons[Performance Analysis and Optimizations for // Kafka Streams Applications (Kafka Summit London, // 2019)]
+// |===
 
 
-[transition="fade-out, slide-in"]
-== Таблицы vs стримы
+// == Таблицы vs стримы
+// 
+// Местонахождение пользователя
+// 
+// .Michael G. Noll. Of Streams and Tables in Kafka and Stream Processing
+// image::stream-table-animation-latestLocation.gif[{image-100-width}]
+// 
+// 
+// == Таблицы vs стримы
+// 
+// Количество посещенных мест
+// 
+// .Michael G. Noll. Of Streams and Tables in Kafka and Stream Processing
+// image::stream-table-animation-numVisitedLocations.gif[{image-100-width}// ]
 
-Местонахождение пользователя
 
-.Michael G. Noll. Of Streams and Tables in Kafka and Stream Processing
-image::stream-table-animation-latestLocation.gif[{image-100-width}]
-
-[transition="fade-in, fade-out"]
-== Таблицы vs стримы
-
-Количество посещенных мест
-
-.Michael G. Noll. Of Streams and Tables in Kafka and Stream Processing
-image::stream-table-animation-numVisitedLocations.gif[{image-100-width}]
-
-[transition="fade-in, slide-out"]
 == Таблицы vs стримы
 
 Производная и интеграл
@@ -916,32 +1016,20 @@ image::stream-table-animation-numVisitedLocations.gif[{image-100-width}]
 .Martin Kleppmann, “Designing Data Intensive Applications”
 image::derivative-and-integral.png[{image-100-width}]
 
-== Join
+== Переписываем totalling app при помощи KTable
 
-image::derivative.png[{image-40-width}]
-
-[graphviz, "join-storages.png"]
------
-digraph G {
-graph [ dpi = 150 ]; 
-rankdir="LR";
-node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
-Store1 [shape="cylinder"; label="Local Store 1"; fixedsize="true"; width="1.7"]
-Store2 [shape="cylinder"; label="Local Store 2"; fixedsize="true"; width="1.7"]
-Source1 -> Join
-Source2 -> Join
-
-Join -> Sink
-Join -> Store1 [dir=both; label=" \n "]
-Join -> Store2 [dir=both; label=" \n "]
-Store1 -> Store2 [style=invis]
-{rank = same; Store1; Join }
-}
------
+[source,java,highlight='3']
+----
+KTable<String, Long> totals = input.groupByKey().aggregate(
+    () -> 0L, 
+    (k, v, a) -> a + Math.round(v.getAmount() * v.getOdds()),
+    Materialized.with(Serdes.String(), Serdes.Long())
+);
+----
 
 == Переписываем totalling app при помощи KTable
 
-[source,java]
+[source,java,highlight='4']
 ----
 KTable<String, Long> totals = input.groupByKey().aggregate(
     () -> 0L, 
@@ -962,39 +1050,116 @@ Configs:cleanup.policy=compact
 ----
 
 
+== Виды Join-ов: Table-Table
+
+image::table-table.svg[{image-40-width}]
+
+== Виды Join-ов: Table-Table
+
+image::table-table1.svg[{image-40-width}]
+
+== Виды Join-ов: Table-Table
+
+image::table-table2.svg[{image-40-width}]
+
+// == Table-table Join
+// 
+// image::derivative.png[{image-40-width}]
+// 
+// [graphviz, "join-storages.png"]
+// -----
+// digraph G {
+// graph [ dpi = 150 ]; 
+// rankdir="LR";
+// node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+// Store1 [shape="cylinder"; label="Local Store 1"; fixedsize="true"; // width="1.7"]
+// Store2 [shape="cylinder"; label="Local Store 2"; fixedsize="true"; // width="1.7"]
+// Source1 -> Join
+// Source2 -> Join
+// 
+// Join -> Sink
+// Join -> Store1 [dir=both; label=" \n "]
+// Join -> Store2 [dir=both; label=" \n "]
+// Store1 -> Store2 [style=invis]
+// {rank = same; Store1; Join }
+// }
+// -----
+
+== Виды Join-ов: Stream-Table
+
+image::stream-table.svg[{image-40-width}]
+
+== Виды Join-ов: оконный Stream-Stream
+
+image::stream-stream.svg[{image-40-width}]
+
+
+
 == Получаем таблицу счетов матчей
-[source,java]
+
+[source,java,highlight='7-12']
 ----
-KStream<String, Score> scores = 
-    eventScores.flatMap((k, v) ->
+KStream<String, EventScore> eventScores =
+    streamsBuilder.stream(EVENT_SCORE_TOPIC,
+                Consumed.with(Serdes.String(), 
+                new JsonSerde<>(EventScore.class)
+                ));
+        /*  ключ не пригоден для join-а с суммой ставок
+            Key: Germany-Belgium
+            Value: EventScore {
+                     event     = Germany-Belgium;
+                     score     = 1:0;
+                     timestamp = 554215083998;
+             }
+         */
+----
+
+== Получаем таблицу счетов матчей
+
+[source,java,highlight='2,8-9,11-12']
+----
+KStream<String, Score> scores = eventScores
+    .flatMap((k, v) ->
         Stream.of(Outcome.H, Outcome.A).map(o ->
-            KeyValue.pair(String.format("%s:%s", k, o), v))
+            KeyValue.pair(
+                    String.format("%s:%s", k, o), v))
             .collect(Collectors.toList()))
+    /*
+        Key: Germany-Belgium:H
+        Value: EventScore
+        
+        Key: Germany-Belgium:A
+        Value: EventScore
+    */
     .mapValues(EventScore::getScore);
 
+----
+
+== Превращаем поток в таблицу
+[source,java,highlight='5']
+----
 KTable<String, Score> tableScores =
-    scores.groupByKey(Grouped.with(...).reduce((a, b) -> b);
-
-----
-[source,code]
-----
-$kafka-topics --zookeeper localhost --list
-
-table2-demo-KSTREAM-REDUCE-STATE-STORE-0000000006-repartition
-table2-demo-KSTREAM-REDUCE-STATE-STORE-0000000006-changelog
+    scores.groupByKey(
+        Grouped.with(Serdes.String(), 
+                     new JsonSerde<>(Score.class)))
+    .reduce((a, b) -> b);
 ----
 
-== Демо: Объединяем сумму ставок с текущим счётом
-[source,java]
+== Получаем таблицу счетов матчей
+
+[source,java,highlight='6-7']
 ----
 KTable<String, String> joined = 
     totals.join(tableScores,
             (total, eventScore) -> 
                 String.format("(%s)\t%d", eventScore, total));
+                
+/*Key: Germany-Belgium:H
+  Value: (1:0) 171340*/
 ----
 
+== Демо: join() и leftJoin() 
 
-[transition="fade-out, slide-in"]
 == Копартиционирование
 
 Join работает
@@ -1073,7 +1238,6 @@ digraph D {
 } 
 -----
 
-[transition="fade-in, fade-out"]
 == Несовпадение количества партиций
 
 Join не работает (Runtime Exception)
@@ -1141,7 +1305,6 @@ digraph D {
 } 
 -----
 
-[transition="fade-in, slide-out"]
 == Несовпадение алгоритма партицирования
 
 Join не работает молча!
@@ -1275,54 +1438,18 @@ digraph D {
 } 
 -----
 
-== Операции между стримами и таблицами: сводка
-.Источник: https://kafka.apache.org/20/documentation/streams/developer-guide/dsl-api.html#stateful-transformations[Kafka Streams DSL Documentation]
-image::streams-stateful_operations.png[{image-50-width}]
+// == Операции между стримами и таблицами: сводка
+// .Источник: https://kafka.apache.org/20/documentatio// n/streams/developer-guide/dsl-api.html#stateful-tra// nsformations[Kafka Streams DSL Documentation]
+// image::streams-stateful_operations.png[{image-50-wi// dth}]
+// 
 
-[transition="fade-out, slide-in"]
-== Виды Join-ов: Table-Table
-
-image::table-table.svg[{image-40-width}]
-
-[transition="fade-in, fade-out"]
-== Виды Join-ов: Table-Table
-
-image::table-table1.svg[{image-40-width}]
-
-[transition="fade-in, slide-out"]
-== Виды Join-ов: Table-Table
-
-image::table-table2.svg[{image-40-width}]
-
-== Виды Join-ов: Stream-Table
-
-image::stream-table.svg[{image-40-width}]
-
-[transition="fade-in, slide-out"]
-== Виды Join-ов: Stream-Stream
-
-image::stream-stream.svg[{image-40-width}]
-
-
-== Наш план
-
-[cols="20a,60a,20a"]
-|===
-.^|image::kafka.jpg[]
-.^|
-1. [line-through]#Конфигурация приложения. Простые (stateless) трансформации#
-2. [line-through]#Трансформации с использованием локального состояния#
-3. [line-through]#Дуализм «поток—таблица» и табличные join-ы#
-4. *Время и оконные операции*
-.^|image::kafka.jpg[]
-|===
 
 
 == Сохранение Timestamped-значений в{nbsp}RocksDB
 
 WindowKeySchema.java
 
-[source,java]
+[source,java,highlight='8-10']
 ----
 static Bytes toStoreKeyBinary(byte[] serializedKey,
                               long timestamp,
@@ -1363,52 +1490,142 @@ image::livebet.jpg[{image-50-width}]
 
 == Время, вперёд!
 
-[source,java]
+[source,java,highlight='4-6']
 ----
 KStream<String, Bet> bets = streamsBuilder.stream(BET_TOPIC,
     Consumed.with(
             Serdes...)
             .withTimestampExtractor(
-                
                 (record, previousTimestamp) ->
                     ((Bet) record.value()).getTimestamp()
-
             ));
 ----
 (Ещё время можно извлечь из WallClock и RecordMetadata.)
 
 
-== Демо: Windowed Joins
-По событию смены счёта понимаем, какая ставка будет «правильной»:
-[source,java]
+== Из событий смены счёта фомируем поток "surebets"
+[source,java,highlight='4-5']
 ----
-
-Score current = Optional.ofNullable(stateStore.get(key))
+@Override
+public KeyValue<String, Bet> transform (String key, 
+  EventScore value, KeyValueStore<..> stateStore) {
+  Score current = Optional.ofNullable(stateStore.get(key))
                 .orElse(new Score());
-stateStore.put(key, value.getScore());
-
-Outcome currenOutcome = 
+  stateStore.put(key, value.getScore());
+  Outcome currenOutcome = 
     value.getScore().getHome() > current.getHome() 
     ?
     Outcome.H : Outcome.A;
+  Bet bestBet = new Bet(null, value.getEvent(), 
+               currenOutcome, 0, 1, value.getTimestamp());
+  return KeyValue.pair(
+    String.format("%s:%s", key, currenOutcome)
+    , bestBet);
+}
 ----
 
-== Демо: Windowed Joins
-[source, java]
+== Из событий смены счёта фомируем поток "surebets"
+[source,java,highlight='6']
 ----
-KStream<String, String> join = bets.join(outcomes,
-    (bet, sureBet) -> 
-    
-    String.format("%s %dms before goal", 
-                bet.getBettor(),
-                sureBet.getTimestamp() - bet.getTimestamp()),
-                JoinWindows.of(Duration.ofSeconds(1)).before(Duration.ZERO),
-                Joined.with(Serdes....
+@Override
+public KeyValue<String, Bet> transform (String key, 
+  EventScore value, KeyValueStore<..> stateStore) {
+  Score current = Optional.ofNullable(stateStore.get(key))
+                .orElse(new Score());
+  stateStore.put(key, value.getScore());
+  Outcome currenOutcome = 
+    value.getScore().getHome() > current.getHome() 
+    ?
+    Outcome.H : Outcome.A;
+  Bet bestBet = new Bet(null, value.getEvent(), 
+               currenOutcome, 0, 1, value.getTimestamp());
+  return KeyValue.pair(
+    String.format("%s:%s", key, currenOutcome)
+    , bestBet);
+}
+----
+
+== Из событий смены счёта фомируем поток "surebets"
+[source,java,highlight='7-10']
+----
+@Override
+public KeyValue<String, Bet> transform (String key, 
+  EventScore value, KeyValueStore<..> stateStore) {
+  Score current = Optional.ofNullable(stateStore.get(key))
+                .orElse(new Score());
+  stateStore.put(key, value.getScore());
+  Outcome currenOutcome = 
+    value.getScore().getHome() > current.getHome() 
+    ?
+    Outcome.H : Outcome.A;
+  Bet bestBet = new Bet(null, value.getEvent(), 
+               currenOutcome, 0, 1, value.getTimestamp());
+  return KeyValue.pair(
+    String.format("%s:%s", key, currenOutcome)
+    , bestBet);
+}
+----
+
+
+== Из событий смены счёта фомируем поток "surebets"
+[source,java,highlight='14']
+----
+@Override
+public KeyValue<String, Bet> transform (String key, 
+  EventScore value, KeyValueStore<..> stateStore) {
+  Score current = Optional.ofNullable(stateStore.get(key))
+                .orElse(new Score());
+  stateStore.put(key, value.getScore());
+  Outcome currenOutcome = 
+    value.getScore().getHome() > current.getHome() 
+    ?
+    Outcome.H : Outcome.A;
+  Bet bestBet = new Bet(null, value.getEvent(), 
+               currenOutcome, 0, 1, value.getTimestamp());
+  return KeyValue.pair(
+    String.format("%s:%s", key, currenOutcome)
+    , bestBet);
+}
+----
+
+
+== Демо: Windowed Joins
+[source, java,highlight='1,8']
+----
+KStream<String, String> join = bets.join(winningBets,
+    (bet, winningBet) ->
+            String.format("%s bet %s=%s %d",
+                    bet.getBettor(),
+                    bet.getOutcome(),
+                    winningBet.getOutcome(),
+                    winningBet.getTimestamp() - bet.getTimestamp()),
+    JoinWindows.of(Duration.ofSeconds(1)).before(Duration.ZERO),
+    Joined.with(Serdes.String(),
+            new JsonSerde<>(Bet.class),
+            new JsonSerde<>(Bet.class)
     ));
 ----
 
+== Без тестов не разберёшься!
 
-[transition="fade-out, slide-in"]
+[source,java,highlight='9,13']
+----
+@Test
+public void nearBetsFound() {
+  long current = System.currentTimeMillis();
+  putScore(new EventScore(
+    "Turkey-Moldova", new Score().goalHome(), current));
+  putBet(new Bet(
+    "alice", "Turkey-Moldova", Outcome.A, 1, 1.5, current - 100));
+  putBet(new Bet(
+    "bob", "Turkey-Moldova", Outcome.H, 1, 1.5, current - 100));
+  putBet(new Bet(
+    "bob", "Turkey-Moldova", Outcome.H, 1, 1.5, current - 5000));
+  assertEquals(
+    Arrays.asList("Turkey-Moldova:H-bob bet H=H 100"), output);
+}
+----
+
 == Tumbling window
 
 [source,java]
@@ -1420,7 +1637,6 @@ TimeWindowedKStream<..., ...> windowed =
 .Источник: Kafka Streams in Action
 image::tumbling-window.png[{image-70-width}]
 
-[transition="fade-in, fade-out"]
 == Tumbling window
 [source,java]
 ----
@@ -1439,7 +1655,6 @@ KTable<Windowed<...>, Long> count = windowed.count();
 */
 ----
 
-[transition="fade-in, fade-out"]
 == Hopping Window
 [source,java]
 ----
@@ -1451,7 +1666,6 @@ TimeWindowedKStream<..., ...> windowed =
 .Источник: Kafka Streams in Action
 image::hopping-window.png[{image-50-width}]
 
-[transition="fade-in, slide-out"]
 == Session Window
 [source,java]
 ----
@@ -1460,10 +1674,6 @@ SessionWindowedKStream<..., ...> windowed =
         .windowedBy(SessionWindows.with(Duration.ofMinutes(5)));
 ----
 image::streams-session-windows-02.png[{image-50-width}]
-
-== Window Retention time vs. Grace Time
-
-image::window-retention.png[]
 
 
 == Иногда нужны не окна, а Punctuator
@@ -1488,21 +1698,6 @@ class MyTransformer implements Transformer<...> {
 ----
 |===
 
-== Наш план
-
-[cols="20a,60a,20a"]
-|===
-.^|image::kafka.jpg[]
-.^|
-1. [line-through]#Конфигурация приложения. Простые (stateless) трансформации#
-2. [line-through]#Трансформации с использованием локального состояния#
-3. [line-through]#Дуализм «поток—таблица» и табличные join-ы#
-4. [line-through]#Время и оконные операции#
-.^|image::kafka.jpg[]
-|===
-
-*Пора закругляться!*
-
 == Kafka Streams in Action
 
 [.custom-style]
@@ -1514,18 +1709,6 @@ class MyTransformer implements Transformer<...> {
 “Kafka Streams in Action”, November 2018
 * Примеры кода для Kafka 1.x
 |===
-
-== Kafka: The Definitive Guide
-
-[.custom-style]
-[cols="30a,70a"]
-|===
-|image::kafka-the-definitive-guide.jpg[]
-|
-* Gwen Shapira, Neha Narkhede, Todd Palino
-* September 2017
-|===
-
 
 
 == Другие источники
@@ -1540,16 +1723,30 @@ class MyTransformer implements Transformer<...> {
 - Телеграм: Грефневая Кафка
 ** https://t.me/AwesomeKafka_ru
 ** https://t.me/proKafka
-- Kafka Summit Conference
+- Kafka Summit Conference: https://kafka-summit.org/
 
-== Некоторые итоги
+== Всё, что я показывал, есть на гитхабе
 
-[%step]
-* Kafka StreamsAPI -- это удобная абстракция над «сырой» Кафкой
-* Чтобы начать пользоваться, надо настроить мышление под потоковую обработку
-* Технология переживает бурное развитие
-** + живой community, есть шанс повлиять на процесс самому 
-** - публичные интерфейсы изменяются очень быстро
+[cols="30a,70a"]
+|===
+.^|image::octocat.jpg[]
+.^|
+* Слайды: https://inponomarev.github.io/kstreams-examples[inponomarev.github.io/kstreams-examples]
+
+* Исходники: https://github.com/inponomarev/kstreams-examples[github.com/inponomarev/kstreams-examples]
+|===
+
+
+== Полная версия доклада на JUG.MSK
+
+[cols="30a,70a"]
+|===
+.^|image::jugmsk.jpg[]
+.^|
+* Часть I: https://youtu.be/PqQax9zur9I
+* Часть II: https://youtu.be/pipM6bwQjoM
+|===
+
 
 == На этом всё!
 
