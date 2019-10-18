@@ -55,16 +55,13 @@ image::kafka.jpg[{image-30-width}]
 * Удобные штуки «из коробки»:
 ** Персистентный, но «подрезаемый» лог
 ** Microbatching
+** Streams API!
 
 == Зачем нам Streams API?
 
 [%step]
-* Real-time stream processing
-* Stream-like API (map / reduce)
-* Под капотом:
-** Ребалансировка
-** Внутреннее состояние обработчиков (репликация)
-** Легкое масштабирование
+* Легкое масштабирование (чем больше worker-ов, тем быстрее)
+* Устойчивость к потере worker-а (репликация внутреннего состояния)
 
 
 == Когда меня спрашивают, какой стриминговый фреймворк использовать
@@ -81,21 +78,7 @@ image::weuseflink.jpg[{image-60-width}]
 2. Доклад не о жизни в production!
 
 ** https://www.youtube.com/watch?v=wCCR1Tkxc-s[Никита Сальников-Тарновский — Streaming architecture — шаг за рамки примеров кода (devclub.eu 2019.03.26)]
-
-// == Kafka Message
-// 
-// [cols="30a,70a"]
-// |===
-// .^|image::message.jpg[]
-// .^|
-// * Номер партиции
-// * Ключ
-// * Значение
-// |===
-// 
-// == Compacted topics
-// .Источник: Kafka Documentation
-// image::log_compaction.png[{image-60-width}]
+** То же самое на Joker 2019: https://jokerconf.com/2019/talks/2qw2ljhlfoeiipjf0gfzzb/[Потоковое приложение — это не только код, но и 3-4 года поддержки в проде]
 
 == Kafka Streams API: общая структура KStreams-приложения
 
@@ -160,14 +143,6 @@ streams.close();
 
 ----
 
-
-
-== В Спринге достаточно
-
-* Определить `@Bean KafkaStreamsConfiguration`
-* Определить `@Bean Topology`
-* И не забыть добавить `@EnableKafkaStreams`
-
 == Легенда
 
 [cols="30a,70a"]
@@ -190,53 +165,6 @@ class Bet {
 }
 ----
 |===
-
-
-// == @Bean KafkaStreamsConfiguration 
-// 
-// [source,java,highlight='7-8']
-// ----
-// @Bean(name = 
-//     KafkaStreamsDefaultConfiguration
-//                 .DEFAULT_STREAMS_CONFIG_BEAN_NAME)
-// public KafkaStreamsConfiguration getStreamsConfig() // {
-//     Map<String, Object> props = new HashMap<>();
-//     //ВАЖНО!
-//     props.put(StreamsConfig.APPLICATION_ID_CONFIG,
-//         "stateless-demo-app");
-//     //ВАЖНО!
-//     props.put(StreamsConfig.NUM_STREAM_THREADS_CONF// IG, 4);
-//     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFI// G,
-//                                       // "localhost:9092");
-//     ...
-//     KafkaStreamsConfiguration streamsConfig = 
-//             new KafkaStreamsConfiguration(props);
-//     return streamsConfig;
-// }
-// ----
-// 
-// == @Bean KafkaStreamsConfiguration 
-// 
-// [source,java,highlight='10']
-// ----
-// @Bean(name = 
-//     KafkaStreamsDefaultConfiguration
-//                 .DEFAULT_STREAMS_CONFIG_BEAN_NAME)
-// public KafkaStreamsConfiguration getStreamsConfig() // {
-//     Map<String, Object> props = new HashMap<>();
-//     //ВАЖНО!
-//     props.put(StreamsConfig.APPLICATION_ID_CONFIG,
-//         "stateless-demo-app");
-//     //ВАЖНО!
-//     props.put(StreamsConfig.NUM_STREAM_THREADS_CONF// IG, 4);
-//     props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFI// G,
-//                                       // "localhost:9092");
-//     ...
-//     KafkaStreamsConfiguration streamsConfig = 
-//             new KafkaStreamsConfiguration(props);
-//     return streamsConfig;
-// }
-// ----
 
 == @Bean Topology
 [graphviz, "yelling-topology1.png"]
@@ -417,121 +345,19 @@ System.out.println(topology.describe());
 
 image::visualizer.png[{image-50-width}]
 
-// == Как обработать ошибки?
-// 
-// [%step]
-// * `default.deserialization.exception.handler` -- не смогли // десериализовать
-// * `default.production.exception.handler` -- брокер отверг сообщение // (например, оно слишком велико)
-// 
-// == Как обработать ошибки?
-// 
-// * `default.deserialization.exception.handler` -- не смогли // десериализовать
-// * `default.production.exception.handler` -- брокер отверг сообщение // (например, оно слишком велико)
-// * Если совсем развалилось:
-// [source,java]
-// ----
-// streams.setUncaughtExceptionHandler(
-//   (Thread thread, Throwable throwable) -> {
-//     . . .
-//    });
-// ----
-
-// == Что ещё нужно знать про stateless-трансформации?
-// 
-// == Простое ветвление стримов
-// Java-стримы так не могут:
-// [source,java]
-// ----
-// KStream<..> foo = ...
-// KStream<..> bar = foo.mapValues(…).map... to...
-// Kstream<..> baz = foo.filter(…).map... forEach...
-// ----
-// [graphviz, "simplebranch.png"]
-// -----
-// digraph G {
-// graph [ dpi = 150 ]; 
-// rankdir="LR";
-// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
-// Start, BF, CF, DF [style="invis"]
-// Start -> A
-// A -> B -> BF
-// A -> C -> CF
-// }
-// -----
-// 
-// == Ветвление стримов по условию
-// 
-// Не используйте `KStream.branch`, используйте // `KafkaStreamsBrancher`!
-// [source,java]
-// ----
-// new KafkaStreamsBrancher<String, String>()
-//    .branch((key, value) -> value.contains("A"), ks // -> ks.to("A"))
-//    .branch((key, value) -> value.contains("B"), ks // -> ks.to("B"))
-//    .defaultBranch(ks -> ks.to("C"))
-//    .onTopOf(builder.stream("source"))
-//    .map(...)
-// ----
-// [graphviz, "switchbranch.png"]
-// -----
-// digraph G {
-// graph [ dpi = 150 ]; 
-// rankdir="LR";
-// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
-// Start, BF, CF, DF [style="invis"]
-// Branch [shape="diamond", label="?"]
-// Start -> A -> Branch
-// Branch -> B -> BF
-// Branch -> C -> CF
-// }
-// -----
-// 
-// == Простое слияние
-// [source,java]
-// ----
-// KStream<String, Integer> foo = ... 
-// KStream<String, Integer> bar = ...
-// KStream<String, Integer> merge = foo.merge(bar);
-// ----
-// [graphviz, "merge.png"]
-// -----
-// digraph G {
-// graph [ dpi = 150 ]; 
-// rankdir="LR";
-// node [fontsize=16; shape="circle"; // fixedsize="true"; width="0.5"; label=""];
-// Finish, BF, CF, DF [style="invis"]
-// BF -> A
-// CF -> B 
-// A -> C -> Finish
-// B -> C 
-// }
-// -----
 
 == Локальное состояние
 
-Facebook's RocksDB -- что это и зачем?
-
 [.custom-style]
 [cols="25a,75a"]
 |===
 .^|image::rocksdb.png[{image-80-width}]
 .^|
-* Embedded key/value storage
-* LSM Tree (Log-Structured Merge-Tree)
-* High-performant (data locality)
-* Persistent, optimized for SSD
-|===
-
-== RocksDB похож на `TreeMap<K,V>`
-
-[.custom-style]
-[cols="25a,75a"]
-|===
-.^|image::rocksdb.png[{image-80-width}]
-.^|
-* Сохранение K,V в бинарном формате
-* Лексикографическая сортировка
-* Iterator (snapshot view)
-* Удаление диапазона (deleteRange)
+* Facebook's RocksDB
+** Embedded key/value storage
+** High-performant (data locality)
+** Persistent, optimized for SSD
+* По функционалу похож на `TreeMap<K,V>`!
 |===
 
 == Пишем “Bet Totalling App”
@@ -1062,37 +888,10 @@ image::table-table1.svg[{image-40-width}]
 
 image::table-table2.svg[{image-40-width}]
 
-// == Table-table Join
-// 
-// image::derivative.png[{image-40-width}]
-// 
-// [graphviz, "join-storages.png"]
-// -----
-// digraph G {
-// graph [ dpi = 150 ]; 
-// rankdir="LR";
-// node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
-// Store1 [shape="cylinder"; label="Local Store 1"; fixedsize="true"; // width="1.7"]
-// Store2 [shape="cylinder"; label="Local Store 2"; fixedsize="true"; // width="1.7"]
-// Source1 -> Join
-// Source2 -> Join
-// 
-// Join -> Sink
-// Join -> Store1 [dir=both; label=" \n "]
-// Join -> Store2 [dir=both; label=" \n "]
-// Store1 -> Store2 [style=invis]
-// {rank = same; Store1; Join }
-// }
-// -----
 
 == Виды Join-ов: Stream-Table
 
 image::stream-table.svg[{image-40-width}]
-
-== Виды Join-ов: оконный Stream-Stream
-
-image::stream-stream.svg[{image-40-width}]
-
 
 
 == Получаем таблицу счетов матчей
@@ -1438,10 +1237,9 @@ digraph D {
 } 
 -----
 
-// == Операции между стримами и таблицами: сводка
-// .Источник: https://kafka.apache.org/20/documentatio// n/streams/developer-guide/dsl-api.html#stateful-tra// nsformations[Kafka Streams DSL Documentation]
-// image::streams-stateful_operations.png[{image-50-wi// dth}]
-// 
+== Виды Join-ов: оконный Stream-Stream
+
+image::stream-stream.svg[{image-40-width}]
 
 
 
@@ -1626,77 +1424,14 @@ public void nearBetsFound() {
 }
 ----
 
-== Tumbling window
+== Tumbling, Hopping & Session-окна для агрегации
 
-[source,java]
-----
-TimeWindowedKStream<..., ...> windowed = 
-    stream.groupByKey()
-        .windowedBy(TimeWindows.of(Duration.ofSeconds(20)));
-----
-.Источник: Kafka Streams in Action
-image::tumbling-window.png[{image-70-width}]
-
-== Tumbling window
-[source,java]
-----
-TimeWindowedKStream<..., ...> windowed = 
-    stream.groupByKey()
-        .windowedBy(TimeWindows.of(Duration.ofSeconds(20)));
-    
-KTable<Windowed<...>, Long> count = windowed.count();
-
-/*
-* Windowed<K> interface:
-* - K key()
-* - Window window()
-* -- Instant startTime()
-* -- Instant endTime()
-*/
-----
-
-== Hopping Window
-[source,java]
-----
-TimeWindowedKStream<..., ...> windowed = 
-    stream.groupByKey()
-        .windowedBy(TimeWindows.of(Duration.ofSeconds(20))
-                        .advanceBy(Duration.ofSeconds(10)));
-----
-.Источник: Kafka Streams in Action
-image::hopping-window.png[{image-50-width}]
-
-== Session Window
-[source,java]
-----
-SessionWindowedKStream<..., ...> windowed = 
-    stream.groupByKey()
-        .windowedBy(SessionWindows.with(Duration.ofMinutes(5)));
-----
-image::streams-session-windows-02.png[{image-50-width}]
-
-
-== Иногда нужны не окна, а Punctuator
-
-[.custom-style]
-[cols="30a,70a"]
+[cols="33a,33a,33a"]
 |===
-|image::metronome.jpg[]
-|
-[source,java]
-----
-class MyTransformer implements Transformer<...> {
-    @Override
-    public void init(ProcessorContext context) {
-    
-        context.schedule(
-            Duration.ofSeconds(10),
-            PunctuationType.WALL_CLOCK_TIME,
-            timestamp->{. . .});
-            
-    }
-----
+| image::tumbling-window.png[] | image::hopping-window.png[] | image::streams-session-windows-02.png[]
 |===
+
+
 
 == Kafka Streams in Action
 
@@ -1709,15 +1444,6 @@ class MyTransformer implements Transformer<...> {
 “Kafka Streams in Action”, November 2018
 * Примеры кода для Kafka 1.x
 |===
-
-
-== Другие источники
-
-- https://docs.confluent.io/current/streams/developer-guide/index.html[docs.confluent.io: Streams Developer Guide]
-- https://www.confluent.io/blog/stream-processing-part-1-tutorial-developing-streaming-applications[Getting Your Feet Wet with Stream Processing (Confluent tutorials)]
-- Исходники!
-** https://github.com/apache/kafka/
-** https://github.com/spring-projects/spring-kafka
 
 == Сообщества, конференции
 - Телеграм: Грефневая Кафка
